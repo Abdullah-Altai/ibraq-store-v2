@@ -49,8 +49,12 @@ function applySettings(){
  $("#aboutSection").classList.toggle("hidden",!st.showAbout);
  $("#adsSection").classList.toggle("hidden",!st.showAds);
  const wa=`https://wa.me/${String(st.whatsapp).replace(/\D/g,"")}`;
- $("#whatsappTop").href=wa;$("#whatsappOrder").href=wa;
+ $("#whatsappTop").href=wa;
+ const orderButton=$("#whatsappOrder");
+ if(orderButton) orderButton.removeAttribute("href");
  $("#whatsappTop").textContent=lang==="ar"?(st.whatsappLabelAr||"واتساب"):(st.whatsappLabelEn||"WhatsApp");
+ const topButton=$("#whatsappTop");
+ if(topButton){topButton.onclick=()=>{topButton.href=wa;};}
  $$('[data-i18n]').forEach(el=>{if(!["offers","products","about"].includes(el.dataset.i18n))el.textContent=tx(el.dataset.i18n)});
  $("#searchInput").placeholder=lang==="ar"?(st.searchPlaceholderAr||tx("search")):(st.searchPlaceholderEn||tx("search"));
  $("#emptyState").textContent=tx("empty");
@@ -235,23 +239,40 @@ function renderCart(){
     const wa=$("#whatsappOrder");
     if(wa){
       wa.href=`https://wa.me/${phone}?text=${encodeURIComponent(receiptText)}`;
+      wa.removeAttribute("target");
       wa.onclick=async event=>{
-        if(!cart.length)return;
-        if(!window.ibraqCloud?.ready){toast(lang==="ar"?"أكمل إعداد مفتاح Supabase أولاً":"Complete Supabase setup first");return;}
         event.preventDefault();
-        const waWindow=window.open('about:blank','_blank');
+        if(!cart.length){toast(lang==="ar"?"السلة فارغة":"Cart is empty");return;}
+        if(!window.ibraqCloud?.ready){toast(lang==="ar"?"أكمل إعداد مفتاح Supabase أولاً":"Complete Supabase setup first");return;}
+
         const customerName=prompt(lang==="ar"?"اكتب اسمك الكامل":"Enter your full name",localStorage.getItem("ibraq_customer_name")||"");
-        if(!customerName){waWindow?.close();return;}
+        if(!customerName)return;
         const customerPhone=prompt(lang==="ar"?"اكتب رقم هاتفك":"Enter your phone number",localStorage.getItem("ibraq_customer_phone")||"");
-        if(!customerPhone){waWindow?.close();return;}
+        if(!customerPhone)return;
         const customerAddress=prompt(lang==="ar"?"اكتب العنوان (اختياري)":"Address (optional)",localStorage.getItem("ibraq_customer_address")||"")||"";
-        localStorage.setItem("ibraq_customer_name",customerName);localStorage.setItem("ibraq_customer_phone",customerPhone);localStorage.setItem("ibraq_customer_address",customerAddress);
+
+        localStorage.setItem("ibraq_customer_name",customerName);
+        localStorage.setItem("ibraq_customer_phone",customerPhone);
+        localStorage.setItem("ibraq_customer_address",customerAddress);
+
+        const customerBlock=lang==="ar"
+          ? `اسم الزبون: ${customerName}\nرقم الهاتف: ${customerPhone}${customerAddress?`\nالعنوان: ${customerAddress}`:""}`
+          : `Customer: ${customerName}\nPhone: ${customerPhone}${customerAddress?`\nAddress: ${customerAddress}`:""}`;
+        const finalReceiptText=`${receiptText}\n\n${customerBlock}`;
+        const whatsappUrl=`https://wa.me/${phone}?text=${encodeURIComponent(finalReceiptText)}`;
+
         try{
+          wa.setAttribute("aria-busy","true");
           const items=cart.map(item=>{const p=productsById.get(String(item.id));return {product_id:p.id,name_ar:p.nameAr,name_en:p.nameEn,qty:item.qty,price:Number(p.price)||0,image:p.images?.[0]||""}});
           await window.ibraqCloud.createOrder({customer_name:customerName,customer_phone:customerPhone,customer_address:customerAddress,items,total,status:"new",notes:""});
-          if(waWindow){waWindow.opener=null;waWindow.location.href=wa.href}else location.href=wa.href;
-          cart=[];saveCart(cart);renderCart();toast(lang==="ar"?"تم حفظ الطلب":"Order saved");
-        }catch(error){waWindow?.close();console.error(error);toast(lang==="ar"?"تعذر حفظ الطلب":"Could not save order");}
+          cart=[];saveCart(cart);renderCart();
+          window.location.href=whatsappUrl;
+        }catch(error){
+          console.error(error);
+          toast(lang==="ar"?"تعذر حفظ الطلب":"Could not save order");
+        }finally{
+          wa.removeAttribute("aria-busy");
+        }
       };
     }
 

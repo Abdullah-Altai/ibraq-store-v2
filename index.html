@@ -78,7 +78,7 @@
         <button id="clearCart" class="secondary" data-i18n="clearCart">تفريغ السلة</button>
         <a id="whatsappOrder" class="primary" target="_blank" rel="noopener" data-i18n="whatsapp">فتح واتساب</a>
       </div>
-      <small class="note" data-i18n="waNote">يفتح واتساب بدون رسالة جاهزة.</small>
+      <small class="note" data-i18n="waNote">يفتح واتساب ومعه فاتورة الطلب جاهزة للإرسال.</small>
     </div>
   </div>
 
@@ -111,10 +111,10 @@
   <div id="toast" class="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-bridge.js"></script>
+  <script src="supabase-config.js?v=20260711-3"></script>
+  <script src="supabase-bridge.js?v=20260711-3"></script>
   <script src="store.js?v=pro2026"></script>
-  <script src="app.js?v=scale2026"></script>
+  <script src="app.js?v=whatsapp-separate-20260711"></script>
   <script>document.getElementById("loadMoreProducts").addEventListener("click",loadMoreProducts);</script>
   <script>
 if("serviceWorker" in navigator){
