@@ -137,10 +137,19 @@ function renderAds(){
  const slider=$("#adsSlider");
  const slides=[...slider.querySelectorAll(".ad-card")];
  const showSlide=index=>{
-   i=index%slides.length;
-   slides[i]?.scrollIntoView({behavior:"smooth",block:"nearest",inline:"start"});
-   $$(".dot").forEach((d,x)=>d.classList.toggle("active",x===i));
+   i=((index%slides.length)+slides.length)%slides.length;
+   slides.forEach((slide,x)=>{
+     slide.classList.toggle("active",x===i);
+     slide.setAttribute("aria-hidden",x===i?"false":"true");
+     const video=slide.querySelector("video");
+     if(video){
+       if(x===i){ video.currentTime=0; video.play().catch(()=>{}); }
+       else { video.pause(); }
+     }
+   });
+   $$("#sliderDots .dot").forEach((d,x)=>d.classList.toggle("active",x===i));
  };
+ if(slides.length){ showSlide(0); }
  if(ads.length>1)sliderTimer=setInterval(()=>showSlide(i+1),3000);
 }
 function openQty(id){
