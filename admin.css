@@ -15,3 +15,12 @@ input:focus,textarea:focus,select:focus{outline:2px solid rgba(124,58,237,.35);b
 .save,.section-top button,#exportBtn,.file-btn{box-shadow:0 8px 18px rgba(124,58,237,.2)}
 .card-actions button{font-weight:700}
 @media(max-width:850px){aside{position:sticky;top:0;z-index:10;height:auto;padding:12px}nav{padding-bottom:3px}main{width:100%}}
+
+/* Advertisement image upload */
+.ad-upload-label input[type="file"]{padding:10px;cursor:pointer}
+.upload-help{display:block;color:var(--muted);font-size:12px;line-height:1.8;margin-top:4px}
+.ad-preview-wrap{border:1px dashed #4a3858;border-radius:14px;padding:12px;background:#0f0b14;min-height:120px;display:grid;place-items:center;gap:8px;text-align:center}
+.ad-preview-wrap img{width:min(100%,420px);aspect-ratio:16/9;object-fit:cover;border-radius:12px;border:1px solid #34283f}
+.ad-image-empty{color:var(--muted);padding:28px 10px}
+
+.admin-card>video{width:120px;height:95px;object-fit:cover;border-radius:14px;background:#000}.ad-preview-wrap video,.ad-preview-wrap img{max-width:100%;max-height:340px;border-radius:16px;object-fit:contain;background:#09070d}
