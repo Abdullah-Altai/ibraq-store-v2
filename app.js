@@ -269,7 +269,8 @@ function renderCart(){
           window.location.href=whatsappUrl;
         }catch(error){
           console.error(error);
-          toast(lang==="ar"?"تعذر حفظ الطلب":"Could not save order");
+          toast(lang==="ar"?"سيفتح واتساب، لكن تعذر حفظ الطلب في صفحة الطلبات":"WhatsApp will open, but the order could not be saved");
+          window.location.href=whatsappUrl;
         }finally{
           wa.removeAttribute("aria-busy");
         }
