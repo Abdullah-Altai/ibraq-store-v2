@@ -134,7 +134,14 @@ function renderAds(){
  stabilizeImages($("#adsSlider"));
  $$("[data-ad]").forEach(a=>a.onclick=()=>{const ad=db.ads.find(x=>x.id===a.dataset.ad);if(ad?.productId)openQty(ad.productId)});
  clearInterval(sliderTimer);let i=0;
- if(ads.length>1)sliderTimer=setInterval(()=>{i=(i+1)%ads.length;$("#adsSlider").scrollTo({left:$("#adsSlider").clientWidth*i,behavior:"smooth"});$$(".dot").forEach((d,x)=>d.classList.toggle("active",x===i))},4200);
+ const slider=$("#adsSlider");
+ const slides=[...slider.querySelectorAll(".ad-card")];
+ const showSlide=index=>{
+   i=index%slides.length;
+   slides[i]?.scrollIntoView({behavior:"smooth",block:"nearest",inline:"start"});
+   $$(".dot").forEach((d,x)=>d.classList.toggle("active",x===i));
+ };
+ if(ads.length>1)sliderTimer=setInterval(()=>showSlide(i+1),3000);
 }
 function openQty(id){
  selectedProduct=db.products.find(p=>p.id===id);if(!selectedProduct)return;
