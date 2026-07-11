@@ -129,7 +129,7 @@ function loadMoreProducts(){
 let sliderTimer;
 function renderAds(){
  const ads=db.ads.filter(a=>a.visible).sort((a,b)=>a.sort-b.sort);
- $("#adsSlider").innerHTML=ads.map(a=>{const isVideo=a.mediaType==='video'||/\.(mp4|webm|mov)(\?|$)/i.test(a.image||'');return `<div class="ad-card" data-ad="${a.id}">${isVideo?`<video src="${a.image}" autoplay muted loop playsinline preload="metadata"></video>`:`<img src="${a.image}" loading="eager" decoding="async">`}<div class="ad-overlay"><h3>${esc(loc(a,"title"))}</h3><p>${esc(loc(a,"subtitle"))}</p></div></div>`}).join("");
+ $("#adsSlider").innerHTML=ads.map(a=>`<div class="ad-card" data-ad="${a.id}"><img src="${a.image}" loading="eager" decoding="async"><div class="ad-overlay"><h3>${esc(loc(a,"title"))}</h3><p>${esc(loc(a,"subtitle"))}</p></div></div>`).join("");
  $("#sliderDots").innerHTML=ads.map((_,i)=>`<span class="dot ${i===0?"active":""}"></span>`).join("");
  stabilizeImages($("#adsSlider"));
  $$("[data-ad]").forEach(a=>a.onclick=()=>{const ad=db.ads.find(x=>x.id===a.dataset.ad);if(ad?.productId)openQty(ad.productId)});
