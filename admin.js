@@ -68,7 +68,25 @@ function openProduct(id){
  })
 }
 function openCategory(id){const c=id?db.categories.find(x=>x.id===id):{id:'c'+Date.now(),nameAr:'',nameEn:'',visible:true,sort:db.categories.length};openModal(id?'تعديل القسم':'إضافة قسم',field('اسم القسم بالعربي','nameAr',c.nameAr)+field('Category name in English','nameEn',c.nameEn)+field('الترتيب','sort',c.sort,'number')+`<label class="check"><input name="visible" type="checkbox" ${c.visible?'checked':''}> ظاهر</label>`,async fd=>{Object.assign(c,{nameAr:fd.get('nameAr'),nameEn:fd.get('nameEn'),sort:+fd.get('sort'),visible:fd.has('visible')});if(!id)db.categories.push(c);saveStore(db);await window.ibraqCloud.saveSiteConfig({settings:db.settings,categories:db.categories,ads:db.ads});renderCategories();toast('تم الحفظ')})}
-function openAd(id){const a=id?db.ads.find(x=>x.id===id):{id:'a'+Date.now(),titleAr:'',titleEn:'',subtitleAr:'',subtitleEn:'',image:'',productId:'',visible:true,sort:db.ads.length+1};openModal(id?'تعديل الإعلان':'إضافة إعلان',field('عنوان الإعلان بالعربي','titleAr',a.titleAr)+field('Ad title in English','titleEn',a.titleEn)+field('النص بالعربي','subtitleAr',a.subtitleAr)+field('Text in English','subtitleEn',a.subtitleEn)+field('رابط صورة الإعلان','image',a.image)+field('الترتيب','sort',a.sort,'number')+`<label class="check"><input name="visible" type="checkbox" ${a.visible?'checked':''}> ظاهر</label>`,async fd=>{Object.assign(a,{titleAr:fd.get('titleAr'),titleEn:fd.get('titleEn'),subtitleAr:fd.get('subtitleAr'),subtitleEn:fd.get('subtitleEn'),image:fd.get('image'),sort:+fd.get('sort'),visible:fd.has('visible')});if(!id)db.ads.push(a);saveStore(db);await window.ibraqCloud.saveSiteConfig({settings:db.settings,categories:db.categories,ads:db.ads});renderAds();toast('تم الحفظ')})}
+function openAd(id){
+ const a=id?db.ads.find(x=>x.id===id):{id:'a'+Date.now(),titleAr:'',titleEn:'',subtitleAr:'',subtitleEn:'',image:'',mediaType:'image',productId:'',visible:true,sort:db.ads.length+1};
+ const current=a.image?`<div id="adMediaPreview" class="media-preview show">${a.mediaType==='video'?`<video src="${esc(a.image)}" controls muted playsinline></video>`:`<img src="${esc(a.image)}" alt="">`}<div class="media-name">الملف الحالي</div><button type="button" id="removeAdMedia" class="remove-media">حذف الملف الحالي</button></div>`:`<div id="adMediaPreview" class="media-preview"></div>`;
+ openModal(id?'تعديل الإعلان':'إضافة إعلان',field('عنوان الإعلان بالعربي','titleAr',a.titleAr)+field('Ad title in English','titleEn',a.titleEn)+field('النص بالعربي','subtitleAr',a.subtitleAr)+field('Text in English','subtitleEn',a.subtitleEn)+`<label class="media-upload">صورة أو فيديو الإعلان<input id="adMediaFile" name="media" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"><span class="media-help">الصورة المفضلة: 1600 × 900 بكسل — JPG / PNG / WEBP حتى 8 MB<br>الفيديو: MP4 / WEBM حتى 50 MB، ويفضل بنسبة 16:9</span></label>${current}<input type="hidden" name="removeMedia" id="removeMediaFlag" value="0">`+field('الترتيب','sort',a.sort,'number')+`<label class="check"><input name="visible" type="checkbox" ${a.visible?'checked':''}> ظاهر</label>`,async fd=>{
+   let mediaUrl=a.image||'',mediaType=a.mediaType||'image';
+   if(fd.get('removeMedia')==='1'){mediaUrl='';mediaType='image'}
+   const file=fd.get('media');
+   if(file&&file.size){const uploaded=await window.ibraqCloud.uploadAdMedia(file);mediaUrl=uploaded.url;mediaType=uploaded.type}
+   if(!mediaUrl)throw new Error('اختر صورة أو فيديو للإعلان');
+   Object.assign(a,{titleAr:fd.get('titleAr'),titleEn:fd.get('titleEn'),subtitleAr:fd.get('subtitleAr'),subtitleEn:fd.get('subtitleEn'),image:mediaUrl,mediaType,sort:+fd.get('sort'),visible:fd.has('visible')});
+   if(!id)db.ads.push(a);saveStore(db);await window.ibraqCloud.saveSiteConfig({settings:db.settings,categories:db.categories,ads:db.ads});renderAds();toast('تم الحفظ')
+ });
+ setTimeout(()=>{
+   const input=$('#adMediaFile'),preview=$('#adMediaPreview'),flag=$('#removeMediaFlag'),remove=$('#removeAdMedia');
+   const clear=()=>{if(input)input.value='';if(flag)flag.value='1';if(preview){preview.innerHTML='';preview.classList.remove('show')}};
+   if(remove)remove.onclick=clear;
+   if(input)input.onchange=()=>{const f=input.files?.[0];if(!f)return;flag.value='0';const url=URL.createObjectURL(f);preview.innerHTML=(f.type.startsWith('video/')?`<video src="${url}" controls muted playsinline></video>`:`<img src="${url}" alt="">`)+`<div class="media-name">${esc(f.name)}</div><button type="button" class="remove-media" id="removeNewAdMedia">إزالة الملف</button>`;preview.classList.add('show');$('#removeNewAdMedia').onclick=clear};
+ },0)
+}
 $('#addProduct').onclick=()=>openProduct();$('#addCategory').onclick=()=>openCategory();$('#addAd').onclick=()=>openAd();
 $('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ibraq-settings-backup.json';a.click();URL.revokeObjectURL(a.href)};
 $('#importInput').onchange=e=>{const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);db.settings=d.settings||db.settings;db.categories=d.categories||db.categories;db.ads=d.ads||db.ads;saveStore(db);location.reload()}catch{alert('ملف غير صالح')}};if(e.target.files[0])r.readAsText(e.target.files[0])};

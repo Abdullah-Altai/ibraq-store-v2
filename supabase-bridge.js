@@ -23,6 +23,21 @@
     async saveProduct(p){const row=unmapProduct(p);if(!row.name_ar)throw new Error('اسم المنتج بالعربي مطلوب');if(!row.images.length)throw new Error('أضف صورة واحدة على الأقل');const q=p.id?client.from('products').update(row).eq('id',p.id).select().single():client.from('products').insert(row).select().single();const {data,error}=await q;if(error)throw error;return mapProduct(data)},
     async deleteProduct(id,images=[]){const {error}=await client.from('products').delete().eq('id',id);if(error)throw error;const paths=(images||[]).map(storagePath).filter(Boolean);if(paths.length)await client.storage.from(cfg.bucket).remove(paths)},
     async uploadImages(files){const urls=[];for(const original of files){if(!original?.size||!original.type.startsWith('image/'))continue;if(original.size>12*1024*1024)throw new Error('حجم الصورة كبير جداً');const file=await compressImage(original);const path=`products/${new Date().toISOString().slice(0,10)}/${crypto.randomUUID()}.webp`;const {error}=await client.storage.from(cfg.bucket).upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});if(error)throw error;const {data}=client.storage.from(cfg.bucket).getPublicUrl(path);urls.push(data.publicUrl)}return urls},
+    async uploadAdMedia(original){
+      if(!original?.size)throw new Error('اختر صورة أو فيديو');
+      const isImage=original.type.startsWith('image/');
+      const isVideo=original.type.startsWith('video/');
+      if(!isImage&&!isVideo)throw new Error('الملف يجب أن يكون صورة أو فيديو');
+      if(isImage&&original.size>8*1024*1024)throw new Error('حجم الصورة يجب ألا يتجاوز 8 MB');
+      if(isVideo&&original.size>50*1024*1024)throw new Error('حجم الفيديو يجب ألا يتجاوز 50 MB');
+      let file=original,ext=(original.name.split('.').pop()||'bin').toLowerCase();
+      if(isImage){file=await compressImage(original);ext='webp'}
+      const path=`ads/${new Date().toISOString().slice(0,10)}/${crypto.randomUUID()}.${ext}`;
+      const {error}=await client.storage.from(cfg.bucket).upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+      if(error)throw error;
+      const {data}=client.storage.from(cfg.bucket).getPublicUrl(path);
+      return {url:data.publicUrl,type:isVideo?'video':'image',path};
+    },
     async createOrder(order){const payload={...order,customer_name:String(order.customer_name||'').trim().slice(0,120),customer_phone:String(order.customer_phone||'').trim().slice(0,40),customer_address:String(order.customer_address||'').trim().slice(0,300),notes:String(order.notes||'').trim().slice(0,500)};const {error}=await client.from('orders').insert(payload);if(error)throw error;return true},
     async getOrders(){const {data,error}=await client.from('orders').select('*').order('created_at',{ascending:false}).limit(1000);if(error)throw error;return data||[]},
     async updateOrder(id,patch){const {error}=await client.from('orders').update(patch).eq('id',id);if(error)throw error},

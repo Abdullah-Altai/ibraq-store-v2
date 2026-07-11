@@ -380,3 +380,7 @@ body{background:linear-gradient(180deg,#f6efe7 0,#fffdf9 40%,#f8f3ed 100%);}
 .splash-screen img{mix-blend-mode:multiply;background:transparent}
 button:disabled{opacity:.55;cursor:not-allowed}
 .admin-card img,.image-preview img{background:#f2e9df}
+
+/* Advertisement media: clear image/video without dark overlay */
+.ad-card video{width:100%;height:100%;object-fit:cover;display:block;background:#000}
+.ad-card .ad-overlay{display:none!important}
