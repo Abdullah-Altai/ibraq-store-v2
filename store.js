@@ -30,10 +30,10 @@ const defaultStore = {
     {id:"gifts",nameAr:"هدايا",nameEn:"Gifts",visible:true,sort:3}
   ],
   products:[
-    {id:"p1",nameAr:"عطر إبراق الذهبي",nameEn:"IBRAQ Gold Perfume",descAr:"رائحة فاخرة وثبات طويل.",descEn:"Luxurious scent with long-lasting performance.",category:"perfume",price:45000,stock:20,badgeAr:"الأكثر طلباً",badgeEn:"Best seller",visible:true,featured:true,sort:1,images:[svgImg("IBRAQ GOLD","#4b126d","#d79b24"),svgImg("GOLD 2","#8b5a12","#2c123d"),svgImg("GOLD 3","#16101e","#7c3aed")]},
-    {id:"p2",nameAr:"عطر ليلي",nameEn:"Night Perfume",descAr:"نفحات هادئة مناسبة للمساء.",descEn:"Smooth notes made for evenings.",category:"perfume",price:38000,stock:14,badgeAr:"جديد",badgeEn:"New",visible:true,featured:false,sort:2,images:[svgImg("NIGHT","#071a38","#6d28d9"),svgImg("NIGHT 2","#100b22","#0ea5e9")]},
-    {id:"p3",nameAr:"مجموعة العناية",nameEn:"Care Set",descAr:"مجموعة يومية أنيقة ومتكاملة.",descEn:"An elegant complete daily care set.",category:"care",price:29000,stock:8,badgeAr:"عرض",badgeEn:"Offer",visible:true,featured:false,sort:3,images:[svgImg("CARE SET","#064e3b","#14b8a6"),svgImg("CARE 2","#022c22","#22c55e")]},
-    {id:"p4",nameAr:"صندوق هدية",nameEn:"Gift Box",descAr:"تغليف أنيق مناسب للمناسبات.",descEn:"Elegant packaging for special occasions.",category:"gifts",price:25000,stock:12,badgeAr:"",badgeEn:"",visible:true,featured:false,sort:4,images:[svgImg("GIFT BOX","#7f1d1d","#f59e0b"),svgImg("GIFT 2","#4c0519","#fb7185")]}
+    {id:"p1",nameAr:"عطر إبراق الذهبي",nameEn:"IBRAQ Gold Perfume",descAr:"رائحة فاخرة وثبات طويل.",descEn:"Luxurious scent with long-lasting performance.",category:"perfume",price:45000,stock:20,badgeAr:"الأكثر طلباً",badgeEn:"Best seller",visible:true,featured:true,isPackage:false,showPrice:true,showAddToCart:true,sort:1,images:[svgImg("IBRAQ GOLD","#4b126d","#d79b24"),svgImg("GOLD 2","#8b5a12","#2c123d"),svgImg("GOLD 3","#16101e","#7c3aed")]},
+    {id:"p2",nameAr:"عطر ليلي",nameEn:"Night Perfume",descAr:"نفحات هادئة مناسبة للمساء.",descEn:"Smooth notes made for evenings.",category:"perfume",price:38000,stock:14,badgeAr:"جديد",badgeEn:"New",visible:true,featured:false,isPackage:false,showPrice:true,showAddToCart:true,sort:2,images:[svgImg("NIGHT","#071a38","#6d28d9"),svgImg("NIGHT 2","#100b22","#0ea5e9")]},
+    {id:"p3",nameAr:"مجموعة العناية",nameEn:"Care Set",descAr:"مجموعة يومية أنيقة ومتكاملة.",descEn:"An elegant complete daily care set.",category:"care",price:29000,stock:8,badgeAr:"عرض",badgeEn:"Offer",visible:true,featured:false,isPackage:false,showPrice:true,showAddToCart:true,sort:3,images:[svgImg("CARE SET","#064e3b","#14b8a6"),svgImg("CARE 2","#022c22","#22c55e")]},
+    {id:"p4",nameAr:"صندوق هدية",nameEn:"Gift Box",descAr:"تغليف أنيق مناسب للمناسبات.",descEn:"Elegant packaging for special occasions.",category:"gifts",price:25000,stock:12,badgeAr:"",badgeEn:"",visible:true,featured:false,isPackage:false,showPrice:true,showAddToCart:true,sort:4,images:[svgImg("GIFT BOX","#7f1d1d","#f59e0b"),svgImg("GIFT 2","#4c0519","#fb7185")]}
   ],
   ads:[
     {id:"a1",titleAr:"عرض العطر الذهبي",titleEn:"Gold Perfume Offer",subtitleAr:"اضغط لإضافته إلى السلة",subtitleEn:"Tap to add it to cart",image:svgImg("GOLD OFFER","#3b0764","#f59e0b"),productId:"p1",visible:true,sort:1},
@@ -53,6 +53,7 @@ function loadStore(){
         saved.settings.bg = "#f7f3ee";
       }
       saved.settings = Object.assign({}, defaultStore.settings, saved.settings || {});
+      saved.products = saved.products.map(product=>Object.assign({isPackage:false,showPrice:true,showAddToCart:true},product));
       if (!Array.isArray(saved.settings.sectionOrder)) saved.settings.sectionOrder=["ads","products","about"];
       localStorage.setItem(STORE_KEY, JSON.stringify(saved));
       return saved;

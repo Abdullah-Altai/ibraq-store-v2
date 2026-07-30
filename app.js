@@ -3,8 +3,8 @@ let activeCategory="all", selectedProduct=null, gallery={images:[],index:0};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const T={
- ar:{offers:"عروض مميزة",products:"المنتجات",about:"من نحن",cart:"سلة المشتريات",clearCart:"تفريغ السلة",whatsapp:"فتح واتساب",waNote:"عند الضغط يُفتح واتساب مع وصل الطلب جاهزاً للإرسال.",quantity:"العدد",addToCart:"إضافة إلى السلة",search:"ابحث عن منتج",empty:"لا توجد منتجات حالياً",added:"تمت الإضافة إلى السلة",total:"المجموع",items:"عدد القطع",out:"غير متوفر"},
- en:{offers:"Featured Offers",products:"Products",about:"About Us",cart:"Shopping Cart",clearCart:"Clear Cart",whatsapp:"Open WhatsApp",waNote:"WhatsApp opens with the order receipt ready to send.",quantity:"Quantity",addToCart:"Add to Cart",search:"Search products",empty:"No products available",added:"Added to cart",total:"Total",items:"Items",out:"Out of stock"}
+ ar:{offers:"عروض مميزة",products:"المنتجات",about:"من نحن",cart:"سلة المشتريات",clearCart:"تفريغ السلة",whatsapp:"فتح واتساب",waNote:"عند الضغط يُفتح واتساب مع وصل الطلب جاهزاً للإرسال.",quantity:"العدد",addToCart:"إضافة إلى السلة",search:"ابحث عن منتج",empty:"لا توجد منتجات حالياً",added:"تمت الإضافة إلى السلة",total:"المجموع",items:"عدد القطع",out:"غير متوفر",priceOnRequest:"السعر عند الطلب",totalOnRequest:"يُحدد بعد التواصل"},
+ en:{offers:"Featured Offers",products:"Products",about:"About Us",cart:"Shopping Cart",clearCart:"Clear Cart",whatsapp:"Open WhatsApp",waNote:"WhatsApp opens with the order receipt ready to send.",quantity:"Quantity",addToCart:"Add to Cart",search:"Search products",empty:"No products available",added:"Added to cart",total:"Total",items:"Items",out:"Out of stock",priceOnRequest:"Price on request",totalOnRequest:"Confirmed after contact"}
 };
 function tx(k){return T[lang][k]||k}
 function loc(obj,key){return obj[key+(lang==="ar"?"Ar":"En")]||obj[key+"Ar"]||""}
@@ -16,8 +16,14 @@ function applySettings(){
  document.documentElement.style.setProperty("--bg",st.bg);
  document.documentElement.style.setProperty("--site-width",`${st.pageWidth||1120}px`);
  document.documentElement.style.setProperty("--card-radius",`${st.cardRadius||22}px`);
- document.documentElement.style.setProperty("--desktop-columns",st.productColumnsDesktop||4);
- document.documentElement.style.setProperty("--mobile-columns",st.productColumnsMobile||2);
+ const desktopColumns=Math.max(1,Number(st.productColumnsDesktop)||4);
+ const mobileColumns=Math.max(1,Number(st.productColumnsMobile)||2);
+ document.documentElement.style.setProperty("--desktop-columns",desktopColumns);
+ document.documentElement.style.setProperty("--mobile-columns",mobileColumns);
+ document.documentElement.style.setProperty("--package-span-desktop",Math.min(2,desktopColumns));
+ document.documentElement.style.setProperty("--package-span-mobile",Math.min(2,mobileColumns));
+ document.documentElement.style.setProperty("--package-aspect-desktop",desktopColumns>=2?"2 / 1":"1 / 1");
+ document.documentElement.style.setProperty("--package-aspect-mobile",mobileColumns>=2?"2 / 1":"1 / 1");
  document.documentElement.style.setProperty("--hero-name-size",`${st.heroNameSize||34}px`);
  document.documentElement.style.setProperty("--tagline-size",`${st.taglineSize||16}px`);
  document.documentElement.style.setProperty("--section-title-size",`${st.sectionTitleSize||22}px`);
@@ -87,15 +93,18 @@ function stabilizeImages(root=document){
 const PRODUCT_PAGE_SIZE=24;
 let visibleProductCount=PRODUCT_PAGE_SIZE;
 function productCardHtml(p,i){
- return `<article class="product-card">
+ const showPrice=p.showPrice!==false,showAddToCart=p.showAddToCart!==false;
+ const priceHtml=showPrice?`<span class="price">${Number(p.price).toLocaleString()} ${currency()}</span>`:"";
+ const addHtml=showAddToCart?`<button class="add-btn" data-add="${p.id}" ${(+p.stock||0)<=0?"disabled":""}>${(+p.stock||0)<=0?tx("out"):tx("addToCart")}</button>`:"";
+ const actionsHtml=priceHtml||addHtml?`<div class="price-row">${priceHtml}${addHtml}</div>`:"";
+ return `<article class="product-card ${p.isPackage?"package-card":""}">
    <div class="product-image-wrap">
     <img class="product-image image-loading" data-open="${p.id}" id="main-${p.id}" src="${p.images?.[0]||""}" alt="${esc(loc(p,"name"))}" loading="${i<4?"eager":"lazy"}" decoding="async" fetchpriority="${i<4?"high":"low"}">
     ${loc(p,"badge")?`<span class="badge">${esc(loc(p,"badge"))}</span>`:""}
     ${p.images?.length>1?`<div class="thumbs">${p.images.slice(0,4).map((im,x)=>`<img class="thumb ${x===0?"active":""}" data-product="${p.id}" data-index="${x}" src="${im}" loading="lazy" decoding="async">`).join("")}</div>`:""}
    </div>
    <div class="product-info"><h3>${esc(loc(p,"name"))}</h3><p>${esc(loc(p,"desc"))}</p>
-    <div class="price-row"><span class="price">${Number(p.price).toLocaleString()} ${currency()}</span>
-    <button class="add-btn" data-add="${p.id}" ${(+p.stock||0)<=0?"disabled":""}>${(+p.stock||0)<=0?tx("out"):tx("addToCart")}</button></div>
+    ${actionsHtml}
    </div></article>`;
 }
 function bindProductEvents(root=document){
@@ -154,6 +163,7 @@ function renderAds(){
 }
 function openQty(id){
  selectedProduct=db.products.find(p=>p.id===id);if(!selectedProduct)return;
+ if(selectedProduct.showAddToCart===false)return;
  if((+selectedProduct.stock||0)<=0){toast(tx("out"));return;}
  $("#qtyImage").src=selectedProduct.images?.[0]||"";
  $("#qtyTitle").textContent=loc(selectedProduct,"name");
@@ -217,7 +227,7 @@ function renderCart(){
       const p=productsById.get(String(item?.id));
       const stock=Math.max(0,Number(p?.stock)||0);
       const qty=Math.min(stock,MAX_QTY_PER_PRODUCT,Math.max(1,Math.floor(Number(item?.qty)||1)));
-      if(p && stock>0 && qty>0) cleaned.push({id:p.id,qty});
+      if(p && p.showAddToCart!==false && stock>0 && qty>0) cleaned.push({id:p.id,qty});
     }
     const changed=JSON.stringify(cleaned)!==JSON.stringify(cart);
     cart=cleaned;
@@ -232,7 +242,8 @@ function renderCart(){
       cartItems.innerHTML=cart.map(item=>{
         const p=productsById.get(String(item.id));
         const image=(Array.isArray(p.images)&&p.images[0])?p.images[0]:svgImg("IBRAQ","#f4ede5","#c9a36a");
-        return `<div class="cart-item"><img src="${image}" alt="${esc(loc(p,"name"))}" loading="lazy" decoding="async"><div><h4>${esc(loc(p,"name"))}</h4><small>${Number(p.price||0).toLocaleString()} ${currency()}</small></div><div class="cart-controls"><button type="button" data-minus="${esc(p.id)}">−</button><b>${item.qty}</b><button type="button" data-plus="${esc(p.id)}">+</button><button type="button" class="remove" data-remove="${esc(p.id)}">×</button></div></div>`;
+        const priceText=p.showPrice!==false?`${Number(p.price||0).toLocaleString()} ${currency()}`:tx("priceOnRequest");
+        return `<div class="cart-item"><img src="${image}" alt="${esc(loc(p,"name"))}" loading="lazy" decoding="async"><div><h4>${esc(loc(p,"name"))}</h4><small>${priceText}</small></div><div class="cart-controls"><button type="button" data-minus="${esc(p.id)}">−</button><b>${item.qty}</b><button type="button" data-plus="${esc(p.id)}">+</button><button type="button" class="remove" data-remove="${esc(p.id)}">×</button></div></div>`;
       }).join("")||`<div class="empty">${tx("empty")}</div>`;
     }
 
@@ -240,17 +251,20 @@ function renderCart(){
       const p=productsById.get(String(item.id));
       return sum+(Number(p?.price)||0)*item.qty;
     },0);
+    const hasHiddenPrices=cart.some(item=>productsById.get(String(item.id))?.showPrice===false);
+    const displayedTotal=hasHiddenPrices?tx("totalOnRequest"):`${total.toLocaleString()} ${currency()}`;
     const receipt=$("#receipt");
-    if(receipt) receipt.innerHTML=`<div class="receipt-row"><span>${tx("items")}</span><b>${count}</b></div><div class="receipt-row total"><span>${tx("total")}</span><b>${total.toLocaleString()} ${currency()}</b></div>`;
+    if(receipt) receipt.innerHTML=`<div class="receipt-row"><span>${tx("items")}</span><b>${count}</b></div><div class="receipt-row total"><span>${tx("total")}</span><b>${displayedTotal}</b></div>`;
 
     const receiptLines=cart.map((item,i)=>{
       const p=productsById.get(String(item.id));
       const price=Number(p?.price)||0;
+      if(p?.showPrice===false)return `${i+1}. ${loc(p,"name")}\n${lang==="ar"?"العدد":"Qty"}: ${item.qty}\n${tx("priceOnRequest")}`;
       return `${i+1}. ${loc(p,"name")}\n${lang==="ar"?"العدد":"Qty"}: ${item.qty} × ${price.toLocaleString()} ${currency()} = ${(price*item.qty).toLocaleString()} ${currency()}`;
     });
     const receiptText=lang==="ar"
-      ? `وصل طلب من متجر ${db.settings.nameAr||"إبراق"}\n\n${receiptLines.join("\n\n")}\n\nعدد القطع: ${count}\nالمجموع: ${total.toLocaleString()} ${currency()}`
-      : `Order receipt from ${db.settings.nameEn||"IBRAQ"}\n\n${receiptLines.join("\n\n")}\n\nItems: ${count}\nTotal: ${total.toLocaleString()} ${currency()}`;
+      ? `وصل طلب من متجر ${db.settings.nameAr||"إبراق"}\n\n${receiptLines.join("\n\n")}\n\nعدد القطع: ${count}\nالمجموع: ${displayedTotal}`
+      : `Order receipt from ${db.settings.nameEn||"IBRAQ"}\n\n${receiptLines.join("\n\n")}\n\nItems: ${count}\nTotal: ${displayedTotal}`;
     const phone=String(db.settings.whatsapp||"").replace(/\D/g,"");
     const wa=$("#whatsappOrder");
     if(wa){

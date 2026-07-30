@@ -4,6 +4,9 @@ alter table public.products add column if not exists badge_ar text default '';
 alter table public.products add column if not exists badge_en text default '';
 alter table public.products add column if not exists visible boolean not null default true;
 alter table public.products add column if not exists sort_order integer not null default 0;
+alter table public.products add column if not exists is_package boolean not null default false;
+alter table public.products add column if not exists show_price boolean not null default true;
+alter table public.products add column if not exists show_add_to_cart boolean not null default true;
 alter table public.products alter column images set default '{}';
 
 alter table public.products enable row level security;

@@ -22,3 +22,4 @@ Notes:
 - Cart and visual homepage settings remain in the customer's/admin's browser.
 - The maximum quantity is 100 per perfume, and also cannot exceed stock.
 - admin.html uses Supabase Authentication, not the old admin/admin123 login.
+- If this is an upgrade of an existing database, run UPGRADE-PRODUCT-DISPLAY.sql once.
